@@ -1,0 +1,8 @@
+web/node_modules/
+web/dist/
+backend/flagstudio
+backend/flagstudio.exe
+*.log
+!docs/test-results/*.log
+.env
+.DS_Store

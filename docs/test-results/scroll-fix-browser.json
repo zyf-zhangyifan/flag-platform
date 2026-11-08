@@ -1,0 +1,114 @@
+{
+  "beforeFix": {
+    "before": {
+      "rows": [
+        "新版结算流程 · 预发布\ncheckout_v2",
+        "会员专属推荐\nmember_recommendations",
+        "视频演示 · 灰度结算\nvideo_demo_checkout",
+        "视频演示 · 环境隔离\nvideo_demo_checkout",
+        "智能搜索\nsmart_search",
+        "新版结算流程\ncheckout_v2"
+      ],
+      "scrollTop": 320
+    },
+    "after": {
+      "rows": [
+        "视频演示 · 环境隔离\nvideo_demo_checkout",
+        "新版结算流程 · 预发布\ncheckout_v2",
+        "会员专属推荐\nmember_recommendations",
+        "视频演示 · 灰度结算\nvideo_demo_checkout",
+        "智能搜索\nsmart_search",
+        "新版结算流程\ncheckout_v2"
+      ],
+      "scrollTop": 213.5
+    }
+  },
+  "afterFixCoordinateClicks": [
+    {
+      "checked": "false",
+      "documentHeight": 1185,
+      "rows": [
+        "视频演示 · 环境隔离\nvideo_demo_checkout",
+        "新版结算流程 · 预发布\ncheckout_v2",
+        "会员专属推荐\nmember_recommendations",
+        "视频演示 · 灰度结算\nvideo_demo_checkout",
+        "智能搜索\nsmart_search",
+        "新版结算流程\ncheckout_v2"
+      ],
+      "scrollTop": 453,
+      "toggleTop": 291.5546875
+    },
+    {
+      "checked": "true",
+      "documentHeight": 1185,
+      "rows": [
+        "视频演示 · 环境隔离\nvideo_demo_checkout",
+        "新版结算流程 · 预发布\ncheckout_v2",
+        "会员专属推荐\nmember_recommendations",
+        "视频演示 · 灰度结算\nvideo_demo_checkout",
+        "智能搜索\nsmart_search",
+        "新版结算流程\ncheckout_v2"
+      ],
+      "scrollTop": 453,
+      "toggleTop": 291.5546875
+    },
+    {
+      "checked": "false",
+      "documentHeight": 1185,
+      "rows": [
+        "视频演示 · 环境隔离\nvideo_demo_checkout",
+        "新版结算流程 · 预发布\ncheckout_v2",
+        "会员专属推荐\nmember_recommendations",
+        "视频演示 · 灰度结算\nvideo_demo_checkout",
+        "智能搜索\nsmart_search",
+        "新版结算流程\ncheckout_v2"
+      ],
+      "scrollTop": 453,
+      "toggleTop": 291.5546875
+    },
+    {
+      "checked": "true",
+      "documentHeight": 1185,
+      "rows": [
+        "视频演示 · 环境隔离\nvideo_demo_checkout",
+        "新版结算流程 · 预发布\ncheckout_v2",
+        "会员专属推荐\nmember_recommendations",
+        "视频演示 · 灰度结算\nvideo_demo_checkout",
+        "智能搜索\nsmart_search",
+        "新版结算流程\ncheckout_v2"
+      ],
+      "scrollTop": 453,
+      "toggleTop": 291.5546875
+    }
+  ],
+  "locatorAutoScrollMeasurement": [
+    {
+      "checked": "true",
+      "documentHeight": 1185,
+      "rows": [
+        "视频演示 · 环境隔离\nvideo_demo_checkout",
+        "新版结算流程 · 预发布\ncheckout_v2",
+        "会员专属推荐\nmember_recommendations",
+        "视频演示 · 灰度结算\nvideo_demo_checkout",
+        "智能搜索\nsmart_search",
+        "新版结算流程\ncheckout_v2"
+      ],
+      "scrollTop": 373.5,
+      "toggleTop": 371.0546875
+    },
+    {
+      "checked": "false",
+      "documentHeight": 1185,
+      "rows": [
+        "视频演示 · 环境隔离\nvideo_demo_checkout",
+        "新版结算流程 · 预发布\ncheckout_v2",
+        "会员专属推荐\nmember_recommendations",
+        "视频演示 · 灰度结算\nvideo_demo_checkout",
+        "智能搜索\nsmart_search",
+        "新版结算流程\ncheckout_v2"
+      ],
+      "scrollTop": 453,
+      "toggleTop": 291.5546875
+    }
+  ]
+}

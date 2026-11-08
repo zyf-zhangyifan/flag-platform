@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_USER: flagstudio
+      POSTGRES_PASSWORD: flagstudio
+      POSTGRES_DB: flagstudio
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flagstudio -d flagstudio"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      DATABASE_URL: postgres://flagstudio:flagstudio@db:5432/flagstudio?sslmode=disable
+      SEED_DEMO: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+  tests:
+    profiles: [test]
+    image: golang:1.27-alpine
+    working_dir: /src/backend
+    volumes:
+      - ./backend:/src/backend:ro
+      - go-mod-cache:/go/pkg/mod
+    environment:
+      TEST_DATABASE_URL: postgres://flagstudio:flagstudio@db:5432/flagstudio?sslmode=disable
+    command: ["go", "test", "-count=1", "-v", "./..."]
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  pgdata:
+  go-mod-cache:

@@ -1,0 +1,13 @@
+npm notice run flag-studio-web@1.0.0 test
+npm notice run node --test src/validation.test.mjs
+✔ equals accepts typed scalars only (0.5572ms)
+✔ in requires a nonempty scalar array (0.9248ms)
+✔ attributes must be a JSON object (0.1712ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 58.6212

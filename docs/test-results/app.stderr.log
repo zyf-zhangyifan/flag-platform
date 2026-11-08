@@ -1,0 +1,10 @@
+panic: pattern "GET /" (registered at flagstudio/main.go:39) conflicts with pattern "/api/" (registered at flagstudio/api.go:101):
+	GET / matches fewer methods than /api/, but has a more general path pattern
+
+goroutine 1 [running]:
+net/http.(*ServeMux).register(...)
+	net/http/server.go:2977
+net/http.(*ServeMux).HandleFunc(0x18?, {0x7ff610e2cad3?, 0x6fc23ac00?}, 0x1?)
+	net/http/server.go:2951 +0x5e
+main.main()
+	flagstudio/main.go:39 +0x333

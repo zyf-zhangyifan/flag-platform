@@ -1,0 +1,40 @@
+=== RUN   TestIntegrationLifecycle
+--- PASS: TestIntegrationLifecycle (0.14s)
+=== RUN   TestIntegrationValidationAndOwnership
+--- PASS: TestIntegrationValidationAndOwnership (0.60s)
+=== RUN   TestIntegrationHistoryFailureRollsBack
+2026/11/07 13:18:59 request error: ERROR: test: audit write failure (SQLSTATE P0001)
+2026/11/07 13:18:59 request error: ERROR: test: audit write failure (SQLSTATE P0001)
+2026/11/07 13:18:59 request error: ERROR: test: audit write failure (SQLSTATE P0001)
+2026/11/07 13:18:59 request error: ERROR: test: audit write failure (SQLSTATE P0001)
+--- PASS: TestIntegrationHistoryFailureRollsBack (0.11s)
+=== RUN   TestIntegrationConcurrentUniqueness
+--- PASS: TestIntegrationConcurrentUniqueness (0.20s)
+=== RUN   TestIntegrationSeedIdempotent
+--- PASS: TestIntegrationSeedIdempotent (0.10s)
+=== RUN   TestEvaluate
+=== RUN   TestEvaluate/first_matching_rule_wins_including_false
+=== RUN   TestEvaluate/in_operator_matches
+=== RUN   TestEvaluate/default_true
+=== RUN   TestEvaluate/default_false_missing_attribute
+=== RUN   TestEvaluate/disabled_overrides_default_and_rules
+=== RUN   TestEvaluate/null_does_not_match
+=== RUN   TestEvaluate/array_does_not_match_scalar
+=== RUN   TestEvaluate/matching_is_case_sensitive
+--- PASS: TestEvaluate (0.00s)
+    --- PASS: TestEvaluate/first_matching_rule_wins_including_false (0.00s)
+    --- PASS: TestEvaluate/in_operator_matches (0.00s)
+    --- PASS: TestEvaluate/default_true (0.00s)
+    --- PASS: TestEvaluate/default_false_missing_attribute (0.00s)
+    --- PASS: TestEvaluate/disabled_overrides_default_and_rules (0.00s)
+    --- PASS: TestEvaluate/null_does_not_match (0.00s)
+    --- PASS: TestEvaluate/array_does_not_match_scalar (0.00s)
+    --- PASS: TestEvaluate/matching_is_case_sensitive (0.00s)
+=== RUN   TestTypedEquality
+--- PASS: TestTypedEquality (0.00s)
+=== RUN   TestRuleValidation
+--- PASS: TestRuleValidation (0.00s)
+=== RUN   TestFlagValidation
+--- PASS: TestFlagValidation (0.00s)
+PASS
+ok  	flagstudio	2.292s

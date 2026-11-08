@@ -1,0 +1,16 @@
+npm notice run flag-studio-web@1.0.0 test
+npm notice run node --test src/validation.test.mjs src/flag-state.test.mjs
+✔ toggle updates the matching row without moving it to the top (0.9753ms)
+✔ repeated enable/disable preserves row order and uses server values (0.1468ms)
+✔ an update does not insert unrelated rows into the current list (0.1223ms)
+✔ equals accepts typed scalars only (0.6847ms)
+✔ in requires a nonempty scalar array (1.4457ms)
+✔ attributes must be a JSON object (0.3375ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 71.9438

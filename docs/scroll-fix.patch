@@ -1,0 +1,109 @@
+--- a/web/src/main.jsx
++++ b/web/src/main.jsx
+@@ -1,6 +1,7 @@
+ import React, { useEffect, useRef, useState } from 'react';
+ import { createRoot } from 'react-dom/client';
+ import { parseExpected, parseAttributes } from './validation.mjs';
++import { updateFlagInPlace } from './flag-state.mjs';
+ import './styles.css';
+ 
+ const ENV = ['development','staging','production'];
+@@ -80,6 +81,28 @@
+   const closeModal=()=>{setModal(null);setActionError('')};
+   const navigate=p=>{setPage(p);setSelected(null);setActionError('');if(p==='evaluate')setEvalInitial(null)};
+   async function mutate(path,method,body,message){setBusy(true);setActionError('');try{const d=await api(path,{method,body:body===undefined?undefined:JSON.stringify(body)});setReload(x=>x+1);setToast(message);setModal(null);return d}catch(e){setActionError(e.message);return null}finally{setBusy(false)}}
++  async function toggleFlag(id, enabled) {
++    if (busy) return;
++    setBusy(true);setActionError('');
++    try {
++      const updated = await api(`/flags/${id}/enabled`, {method:'PATCH',body:JSON.stringify({enabled})});
++      // Do not trigger the full-list loading branch: unmounting the table shrinks
++      // the document and clamps scrollTop; refetching also reorders updated rows.
++      setFlags(current => updateFlagInPlace(current, updated));
++      setDetail(current => current?.flag.id === id ? {...current,flag:updated} : current);
++      setToast(updated.enabled ? 'Flag 已启用' : 'Flag 已停用');
++      if (selected === id) {
++        // Refresh audit history in place, without replacing the detail with a loader.
++        try {
++          const fresh = await api(`/flags/${id}`);
++          setDetail(current => current?.flag.id === id ? fresh : current);
++        } catch (error) {
++          setActionError('状态已保存，但操作历史刷新失败：'+error.message);
++        }
++      }
++    } catch (error) {setActionError(error.message)}
++    finally {setBusy(false)}
++  }
+   const shown=flags.filter(f=>(!environment||f.environment===environment)&&(!status||String(f.enabled)===status)&&(!search||`${f.name} ${f.key}`.toLowerCase().includes(search.toLowerCase())));
+   const goEval=f=>{setEvalInitial(f);setPage('evaluate');setSelected(null);setActionError('')};
+   return <div className="shell"><aside className="sidebar"><a className="brand" href="#" onClick={e=>{e.preventDefault();navigate('flags')}}><span className="brand-symbol"><Icon name="flag" size={23}/></span><span>Flag Studio<small>FEATURE MANAGEMENT</small></span></a><div className="workspace"><span className="workspace-avatar">D</span><span>Demo Workspace<small>本地开发工作区</small></span><span className="workspace-dot"/></div><p className="nav-label">工作台</p><nav><button className={page==='flags'?'active':''} onClick={()=>navigate('flags')}><Icon name="grid"/>Feature Flags<span className="nav-count">{flags.length}</span></button><button className={page==='evaluate'?'active':''} onClick={()=>navigate('evaluate')}><Icon name="code"/>评估控制台</button></nav><div className="sidebar-note"><Icon name="bolt"/><strong>小范围验证，稳步发布。</strong><p>用有序规则控制功能开放，让每一次变更都有迹可循。</p><span>React + Go + PostgreSQL</span></div><div className="profile"><span className="avatar">D</span><span>Demo Admin<small>固定演示操作者</small></span><span className="profile-dot"/></div></aside>
+@@ -89,7 +112,7 @@
+         <button className="back-link" onClick={()=>{setSelected(null);setActionError('')}}><Icon name="back" size={15}/>返回 Flag 列表</button>
+         {detailError?<div className="error" role="alert">{detailError}<button className="button" onClick={()=>setReload(x=>x+1)}>重试</button></div>:!detail?<div className="loading" role="status">正在加载配置与历史…</div>:<>
+           <div className="page-heading detail-heading"><div><p className="eyebrow">FLAG CONFIGURATION</p><h1>{detail.flag.name}</h1><div className="detail-meta"><code>{detail.flag.key}</code><Badge environment={detail.flag.environment}/><span className={'state '+(detail.flag.enabled?'live':'')}>{detail.flag.enabled?'已启用':'已停用'}</span></div></div><div className="button-row"><button className="button" disabled={busy} onClick={()=>openModal({type:'flag',value:detail.flag})}>编辑信息</button><button className="button primary" onClick={()=>goEval(detail.flag)}><Icon name="play" size={15}/>测试评估</button></div></div>
+-          <div className="config-strip"><div><span>Flag 开关</span><Toggle value={detail.flag.enabled} disabled={busy} label="切换当前 Flag 状态" onChange={v=>mutate(`/flags/${selected}/enabled`,'PATCH',{enabled:v},v?'Flag 已启用':'Flag 已停用')}/></div><div><span>默认返回值</span><Bool value={detail.flag.default_value}/></div><div><span>匹配规则</span><strong>{detail.rules.length} 条</strong></div><div><span>最近更新</span><small>{date(detail.flag.updated_at)}</small></div></div>
++          <div className="config-strip"><div><span>Flag 开关</span><Toggle value={detail.flag.enabled} disabled={busy} label="切换当前 Flag 状态" onChange={v=>toggleFlag(selected,v)}/></div><div><span>默认返回值</span><Bool value={detail.flag.default_value}/></div><div><span>匹配规则</span><strong>{detail.rules.length} 条</strong></div><div><span>最近更新</span><small>{date(detail.flag.updated_at)}</small></div></div>
+           {!detail.flag.enabled&&<div className="hint amber">此 Flag 已停用。所有评估固定返回 false，规则和默认值暂不生效。</div>}
+           <div className="tabs"><button className={detailTab==='rules'?'active':''} onClick={()=>setDetailTab('rules')}>匹配规则 <span>{detail.rules.length}</span></button><button className={detailTab==='history'?'active':''} onClick={()=>setDetailTab('history')}>操作历史 <span>{detail.history.length}</span></button></div>
+           {detailTab==='rules'?<section className="panel"><div className="section-heading"><div><h2>有序匹配规则</h2><p>数字越小越先匹配 · 首条命中即返回 · 不允许重复优先级</p></div><button className="button primary" disabled={busy} onClick={()=>openModal({type:'rule'})}><Icon name="plus" size={17}/>添加规则</button></div>{!detail.rules.length?<Empty title="还没有匹配规则">添加第一条规则，或直接使用默认返回值。</Empty>:<div className="rule-list">{detail.rules.map((r,i)=><div className="rule-card" key={r.id}><span className="rule-order">{String(i+1).padStart(2,'0')}</span><div className="rule-expression"><div><code>{r.attribute}</code><span className="operator">{r.operator}</span><code className="expected">{JSON.stringify(r.expected)}</code></div><small>优先级 {r.priority} <span>·</span> 规则 #{r.id}</small></div><div className="rule-return"><span>返回</span><Bool value={r.result}/></div><div className="rule-actions"><button className="text-button" disabled={busy} onClick={()=>openModal({type:'rule',value:r})}>编辑</button><button className="text-button danger" disabled={busy} onClick={()=>openModal({type:'delete',value:r})}>删除</button></div></div>)}</div>}<div className="default-rule"><span className="default-icon">↳</span><div><strong>默认回退</strong><p>没有规则命中时，返回 Flag 默认值。</p></div><Bool value={detail.flag.default_value}/></div></section>:<section className="panel"><div className="section-heading"><div><h2>操作历史</h2><p>业务变更与历史原子写入 · 最新操作在前</p></div><Icon name="clock"/></div><div className="history-list">{detail.history.map(h=><article key={h.id}><span className="history-icon"><Icon name={h.action.startsWith('rule')?'code':'flag'} size={16}/></span><div><div className="history-heading"><strong>{actions[h.action]||h.action}</strong><time>{date(h.created_at)}</time></div><p>{h.summary}</p><small>{h.actor} · #{h.id}</small><details><summary>查看变更数据</summary><pre className="json-box">{JSON.stringify(h.changes,null,2)}</pre></details></div></article>)}</div></section>}
+@@ -99,7 +122,7 @@
+         <div className="page-heading"><div><p className="eyebrow">RELEASE WITH CONFIDENCE</p><h1>Feature Flags<span className="heading-dot"/></h1><p className="subtitle">掌控功能开放节奏，让每次发布更从容。</p></div><button className="button primary" onClick={()=>openModal({type:'flag'})}><Icon name="plus" size={18}/>新建 Flag</button></div>
+         <div className="stats"><div><span className="stat-icon purple"><Icon name="flag"/></span><div><span>全部 Flags</span><strong>{loading?'—':flags.length}<small>个功能配置</small></strong></div></div><div><span className="stat-icon green"><Icon name="bolt"/></span><div><span>已启用</span><strong>{loading?'—':flags.filter(f=>f.enabled).length}<small>正在提供评估</small></strong></div></div><div><span className="stat-icon blue"><Icon name="grid"/></span><div><span>部署环境</span><strong>3<small>开发 / 预发布 / 生产</small></strong></div></div></div>
+         <section className="flag-table-panel"><div className="filterbar"><div className="search-input"><Icon name="search" size={18}/><input aria-label="搜索 Flag 名称或 Key" placeholder="搜索名称或 Key…" value={search} onChange={e=>setSearch(e.target.value)}/></div><select aria-label="筛选环境" value={environment} onChange={e=>setEnvironment(e.target.value)}><option value="">全部环境</option>{ENV.map(x=><option key={x} value={x}>{envLabels[x]}</option>)}</select><select aria-label="筛选启用状态" value={status} onChange={e=>setStatus(e.target.value)}><option value="">全部状态</option><option value="true">已启用</option><option value="false">已停用</option></select><button className="text-button" disabled={loading} onClick={()=>setReload(x=>x+1)}>刷新</button></div>
+-        {loadError?<div className="error" role="alert">{loadError}<button className="button" onClick={()=>setReload(x=>x+1)}>重试</button></div>:loading?<div className="loading" role="status">正在从 PostgreSQL 加载配置…</div>:!shown.length?<Empty title={flags.length?'没有找到匹配的 Flag':'创建你的第一个 Flag'}>{flags.length?'试试其他关键词，或清除筛选条件。':'点击右上方「新建 Flag」，开始配置你的功能开关。'}</Empty>:<div className="table-scroll"><table><thead><tr><th>功能名称 / KEY</th><th>环境</th><th>启用状态</th><th>默认值</th><th>更新时间</th><th><span className="sr-only">操作</span></th></tr></thead><tbody>{shown.map(f=><tr key={f.id}><td><button className="flag-name" onClick={()=>{setSelected(f.id);setDetailTab('rules');setActionError('')}}><span className="flag-mini"><Icon name="flag" size={18}/></span><span><strong>{f.name}</strong><code>{f.key}</code></span></button></td><td><Badge environment={f.environment}/></td><td><div className="inline-state"><Toggle value={f.enabled} disabled={busy} label={`${f.name} ${f.environment} 启用状态`} onChange={v=>mutate(`/flags/${f.id}/enabled`,'PATCH',{enabled:v},v?'Flag 已启用':'Flag 已停用')}/><span>{f.enabled?'已启用':'已停用'}</span></div></td><td><Bool value={f.default_value}/></td><td className="table-date">{date(f.updated_at)}</td><td><button className="icon-button" aria-label={`查看 ${f.name} 详情`} onClick={()=>{setSelected(f.id);setDetailTab('rules')}}><Icon name="arrow" size={17}/></button></td></tr>)}</tbody></table></div>}
++        {loadError?<div className="error" role="alert">{loadError}<button className="button" onClick={()=>setReload(x=>x+1)}>重试</button></div>:loading?<div className="loading" role="status">正在从 PostgreSQL 加载配置…</div>:!shown.length?<Empty title={flags.length?'没有找到匹配的 Flag':'创建你的第一个 Flag'}>{flags.length?'试试其他关键词，或清除筛选条件。':'点击右上方「新建 Flag」，开始配置你的功能开关。'}</Empty>:<div className="table-scroll"><table><thead><tr><th>功能名称 / KEY</th><th>环境</th><th>启用状态</th><th>默认值</th><th>更新时间</th><th><span className="sr-only">操作</span></th></tr></thead><tbody>{shown.map(f=><tr key={f.id}><td><button className="flag-name" onClick={()=>{setSelected(f.id);setDetailTab('rules');setActionError('')}}><span className="flag-mini"><Icon name="flag" size={18}/></span><span><strong>{f.name}</strong><code>{f.key}</code></span></button></td><td><Badge environment={f.environment}/></td><td><div className="inline-state"><Toggle value={f.enabled} disabled={busy} label={`${f.name} ${f.environment} 启用状态`} onChange={v=>toggleFlag(f.id,v)}/><span>{f.enabled?'已启用':'已停用'}</span></div></td><td><Bool value={f.default_value}/></td><td className="table-date">{date(f.updated_at)}</td><td><button className="icon-button" aria-label={`查看 ${f.name} 详情`} onClick={()=>{setSelected(f.id);setDetailTab('rules')}}><Icon name="arrow" size={17}/></button></td></tr>)}</tbody></table></div>}
+         <div className="table-footer"><span>显示 {shown.length} 个配置，共 {flags.length} 个</span><span>同一 Key 可用于不同环境</span></div></section>
+         <div className="bottom-callout"><span className="callout-icon"><Icon name="code" size={24}/></span><div><strong>上线之前，先验证一次。</strong><p>输入用户属性，实时查看规则命中过程与最终返回值。</p></div><button className="text-button" onClick={()=>navigate('evaluate')}>打开评估控制台 <Icon name="arrow" size={15}/></button></div>
+         <div className="footnote"><Icon name="check" size={15}/> 配置持久化至 PostgreSQL <span>·</span> 每一次业务变更均保留历史</div>
+--- a/web/package.json
++++ b/web/package.json
+@@ -3,7 +3,7 @@
+   "version": "1.0.0",
+   "private": true,
+   "type": "module",
+-  "scripts": { "dev": "vite --host 127.0.0.1", "build": "vite build", "preview": "vite preview --host 127.0.0.1", "test": "node --test src/validation.test.mjs" },
++  "scripts": { "dev": "vite --host 127.0.0.1", "build": "vite build", "preview": "vite preview --host 127.0.0.1", "test": "node --test src/validation.test.mjs src/flag-state.test.mjs" },
+   "dependencies": { "react": "19.3.1", "react-dom": "19.3.1" },
+   "devDependencies": { "vite": "8.3.6" }
+ }
+--- /dev/null
++++ b/web/src/flag-state.mjs
+@@ -0,0 +1,4 @@
++// Keep existing row positions/references: toggling is not a list refresh or re-sort.
++export function updateFlagInPlace(flags, updated) {
++  return flags.map(flag => flag.id === updated.id ? updated : flag);
++}
+--- /dev/null
++++ b/web/src/flag-state.test.mjs
+@@ -0,0 +1,31 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { updateFlagInPlace } from './flag-state.mjs';
++
++test('toggle updates the matching row without moving it to the top', () => {
++  const flags = [{id:1,enabled:true},{id:2,enabled:false},{id:3,enabled:true}];
++  const updated = {id:2,enabled:true,updated_at:'2026-11-07T06:00:00Z'};
++  const result = updateFlagInPlace(flags, updated);
++  assert.deepEqual(result.map(flag => flag.id), [1,2,3]);
++  assert.equal(result[1], updated);
++  assert.equal(result[0], flags[0]);
++  assert.equal(result[2], flags[2]);
++  assert.equal(flags[1].enabled, false);
++});
++
++test('repeated enable/disable preserves row order and uses server values', () => {
++  let flags = [{id:10,enabled:true},{id:20,enabled:true}];
++  for (const enabled of [false,true,false,true]) {
++    flags = updateFlagInPlace(flags, {id:20,enabled});
++    assert.deepEqual(flags.map(flag => flag.id), [10,20]);
++    assert.equal(flags[1].enabled, enabled);
++  }
++});
++
++test('an update does not insert unrelated rows into the current list', () => {
++  const flags = [{id:1,enabled:true}];
++  const result = updateFlagInPlace(flags, {id:99,enabled:false});
++  assert.deepEqual(result, flags);
++  assert.equal(result[0], flags[0]);
++  assert.deepEqual(updateFlagInPlace([], {id:99,enabled:true}), []);
++});

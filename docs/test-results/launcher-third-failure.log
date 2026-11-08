@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "<workspace>\scripts\smoke.py", line 24, in <module>
+    assert call("/api/health")["status"] == "ok"
+           ~~~~^^^^^^^^^^^^^^^
+  File "<workspace>\scripts\smoke.py", line 19, in call
+    print(json.dumps({"method": request.method, "path": path, "input": payload, "status": response.status, "output": raw}, ensure_ascii=False))
+                                ^^^^^^^^^^^^^^
+AttributeError: 'Request' object has no attribute 'method'
+waiting for server to shut down.... done
+server stopped
