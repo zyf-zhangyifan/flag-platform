@@ -36,6 +36,21 @@ func migrate(ctx context.Context, db *pgxpool.Pool, seed bool) error {
 			return err
 		}
 	}
+	if err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE version='002')").Scan(&done); err != nil {
+		return err
+	}
+	if !done {
+		data, readErr := sqlFiles.ReadFile("migrations/002_flag_description.sql")
+		if readErr != nil {
+			return readErr
+		}
+		if _, err = tx.Exec(ctx, string(data)); err != nil {
+			return err
+		}
+		if _, err = tx.Exec(ctx, "INSERT INTO schema_migrations(version) VALUES ('002')"); err != nil {
+			return err
+		}
+	}
 	if seed {
 		data, _ := sqlFiles.ReadFile("seeds/demo.sql")
 		if _, err = tx.Exec(ctx, string(data)); err != nil {
@@ -45,13 +60,13 @@ func migrate(ctx context.Context, db *pgxpool.Pool, seed bool) error {
 	return tx.Commit(ctx)
 }
 
-const flagCols = "id,name,key,environment,enabled,default_value,created_at,updated_at"
+const flagCols = "id,name,key,environment,description,enabled,default_value,created_at,updated_at"
 const ruleCols = "id,flag_id,attribute,operator,expected,result,priority"
 
 type scanner interface{ Scan(...any) error }
 
 func scanFlag(row scanner) (f Flag, err error) {
-	err = row.Scan(&f.ID, &f.Name, &f.Key, &f.Environment, &f.Enabled, &f.DefaultValue, &f.CreatedAt, &f.UpdatedAt)
+	err = row.Scan(&f.ID, &f.Name, &f.Key, &f.Environment, &f.Description, &f.Enabled, &f.DefaultValue, &f.CreatedAt, &f.UpdatedAt)
 	return
 }
 func scanRule(row scanner) (r Rule, err error) {

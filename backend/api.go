@@ -153,7 +153,7 @@ func (a *App) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer tx.Rollback(ctx)
-	f, err := scanFlag(tx.QueryRow(ctx, "INSERT INTO flags(name,key,environment,enabled,default_value) VALUES($1,$2,$3,$4,$5) RETURNING "+flagCols, in.Name, in.Key, in.Environment, *in.Enabled, *in.DefaultValue))
+	f, err := scanFlag(tx.QueryRow(ctx, "INSERT INTO flags(name,key,environment,description,enabled,default_value) VALUES($1,$2,$3,$4,$5,$6) RETURNING "+flagCols, in.Name, in.Key, in.Environment, in.Description, *in.Enabled, *in.DefaultValue))
 	if err == nil {
 		err = audit(ctx, tx, f.ID, "flag.created", "创建 Flag："+f.Name, nil, f)
 	}
@@ -227,14 +227,14 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	a.mutate(w, r, func(ctx context.Context, tx pgx.Tx, before Flag) (any, error) {
-		if before.Name == in.Name && before.Key == in.Key && before.Environment == in.Environment && before.Enabled == *in.Enabled && before.DefaultValue == *in.DefaultValue {
+		if before.Name == in.Name && before.Key == in.Key && before.Environment == in.Environment && before.Description == in.Description && before.Enabled == *in.Enabled && before.DefaultValue == *in.DefaultValue {
 			return before, nil
 		}
-		after, err := scanFlag(tx.QueryRow(ctx, "UPDATE flags SET name=$2,key=$3,environment=$4,enabled=$5,default_value=$6,updated_at=clock_timestamp() WHERE id=$1 RETURNING "+flagCols, before.ID, in.Name, in.Key, in.Environment, *in.Enabled, *in.DefaultValue))
+		after, err := scanFlag(tx.QueryRow(ctx, "UPDATE flags SET name=$2,key=$3,environment=$4,description=$5,enabled=$6,default_value=$7,updated_at=clock_timestamp() WHERE id=$1 RETURNING "+flagCols, before.ID, in.Name, in.Key, in.Environment, in.Description, *in.Enabled, *in.DefaultValue))
 		if err != nil {
 			return nil, err
 		}
-		if before.Name != after.Name || before.Key != after.Key || before.Environment != after.Environment || before.DefaultValue != after.DefaultValue {
+		if before.Name != after.Name || before.Key != after.Key || before.Environment != after.Environment || before.Description != after.Description || before.DefaultValue != after.DefaultValue {
 			if err = audit(ctx, tx, before.ID, "flag.updated", "修改 Flag 基本信息", before, after); err != nil {
 				return nil, err
 			}

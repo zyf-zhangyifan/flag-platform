@@ -101,8 +101,13 @@ func TestIntegrationLifecycle(t *testing.T) {
 	defer server.Close()
 	c := testClient{t, server.URL}
 	c.call("GET", "/api/health", nil, 200)
+	create := flagBody("checkout_v2", "production")
+	create["description"] = "结算流程说明"
 	var f Flag
-	json.Unmarshal(c.call("POST", "/api/flags", flagBody("checkout_v2", "production"), 201), &f)
+	json.Unmarshal(c.call("POST", "/api/flags", create, 201), &f)
+	if f.Description != "结算流程说明" {
+		t.Fatalf("description was not persisted: %+v", f)
+	}
 	base := fmt.Sprintf("/api/flags/%d", f.ID)
 	c.call("POST", "/api/flags", flagBody("checkout_v2", "production"), 409)
 	c.call("POST", "/api/flags", flagBody("checkout_v2", "staging"), 201)
@@ -114,7 +119,7 @@ func TestIntegrationLifecycle(t *testing.T) {
 	if len(d.History) != 2 || len(d.Rules) != 1 {
 		t.Fatalf("failed requests left changes: %+v", d)
 	}
-	c.call("PUT", base, flagBody("checkout_v2", "production"), 200)
+	c.call("PUT", base, create, 200)
 	c.call("PATCH", base+"/enabled", map[string]bool{"enabled": true}, 200)
 	var unchanged Detail
 	json.Unmarshal(c.call("GET", base, nil, 200), &unchanged)
@@ -136,7 +141,13 @@ func TestIntegrationLifecycle(t *testing.T) {
 	changed := flagBody("checkout_v2", "production")
 	changed["name"] = "修改后的名称"
 	changed["default_value"] = true
+	changed["description"] = "已修改的描述"
 	c.call("PUT", base, changed, 200)
+	var updated Detail
+	json.Unmarshal(c.call("GET", base, nil, 200), &updated)
+	if updated.Flag.Description != "已修改的描述" {
+		t.Fatalf("description update did not persist: %+v", updated.Flag)
+	}
 	updatedRule := ruleBody(20)
 	updatedRule["result"] = false
 	c.call("PUT", fmt.Sprintf("%s/rules/%d", base, rule.ID), updatedRule, 200)

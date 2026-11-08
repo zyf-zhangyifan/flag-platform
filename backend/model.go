@@ -18,6 +18,7 @@ type Flag struct {
 	Name         string    `json:"name"`
 	Key          string    `json:"key"`
 	Environment  string    `json:"environment"`
+	Description  string    `json:"description"`
 	Enabled      bool      `json:"enabled"`
 	DefaultValue bool      `json:"default_value"`
 	CreatedAt    time.Time `json:"created_at"`
@@ -49,6 +50,7 @@ type FlagInput struct {
 	Name         string `json:"name"`
 	Key          string `json:"key"`
 	Environment  string `json:"environment"`
+	Description  string `json:"description"`
 	Enabled      *bool  `json:"enabled"`
 	DefaultValue *bool  `json:"default_value"`
 }
@@ -69,6 +71,9 @@ func (v *FlagInput) validate() error {
 	}
 	if !validEnvironment(v.Environment) {
 		return errors.New("环境须为 development、staging 或 production")
+	}
+	if utf8.RuneCountInString(v.Description) > 500 {
+		return errors.New("描述不能超过 500 个字符")
 	}
 	if v.Enabled == nil || v.DefaultValue == nil {
 		return errors.New("enabled 和 default_value 必须为布尔值")

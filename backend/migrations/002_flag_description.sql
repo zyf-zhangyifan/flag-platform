@@ -1,0 +1,1 @@
+ALTER TABLE flags ADD COLUMN description TEXT NOT NULL DEFAULT '';
